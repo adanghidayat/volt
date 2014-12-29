@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """
----------------------------
-volt.config.default_widgets
----------------------------
+-----------------
+volt.config.tests
+-----------------
 
-Volt default widgets, and jinja2 filters and tests.
+Default Jinja2 tests.
 
-:copyright: (c) 2012 Wibowo Arindrarto <bow@bow.web.id>
+:copyright: (c) 2012-2014 Wibowo Arindrarto <bow@bow.web.id>
 :license: BSD
 
 """
@@ -14,24 +14,16 @@ Volt default widgets, and jinja2 filters and tests.
 from past.builtins import basestring
 
 
-def displaytime(datetime_obj, format):
-    """Jinja2 filter for displaying datetime objects according to format.
-
-    datetime_obj -- Datetime object.
-    format -- String of datetime format.
-
-    Example usage:
-        {{ page.time|displaytime("%Y") }} will output, for example "2012".
-    """
-    return datetime_obj.strftime(format)
-
-
 def activatedin(name, config):
     """Jinja2 test for checking whether an engine, plugin, or widget is active.
 
-    name -- Name of engine, plugin, or widget.
-    config -- UnifiedConfigContainer instance, passed as an argument at render
-        time so the values are already primed.
+    :param name: Name or list of names of engine, plugin, or widget
+    :type name: str or [str]
+    :param config: UnifiedConfigContainer instance, passed as an argument at
+        render time so the values are already primed
+    :type config: UnifiedConfigContainer
+    :returns: activation status of the given engine, plugin, or widget
+    :rtype: bool
 
     Example usage:
         {{ if "css_minifier" is activatedin CONFIG }}
@@ -53,22 +45,19 @@ def activatedin(name, config):
         widgets = config.SITE.WIDGETS
 
         for conf in config:
-            try:
-                plugins += getattr(conf, 'PLUGINS')
-                widgets += getattr(conf, 'WIDGETS')
             # we don't care if the Config object doesn't have any plugins
-            # or widgets (e.g. CONFIG.VOLT)
-            except AttributeError:
-                pass
+            # or widgets (e.g. CONFIG.VOLT), so we default to an empty tuple
+            plugins += getattr(conf, 'PLUGINS', tuple())
+            widgets += getattr(conf, 'WIDGETS', tuple())
 
         actives = set(engines + plugins + widgets)
         setattr(config, '_actives', actives)
 
     if isinstance(name, basestring):
         return any([name in x for x in actives])
-    else:
-        results = []
-        for item in name:
-            results.append(any([item in x for x in actives]))
-        return all(results)
+
+    results = []
+    for item in name:
+        results.append(any([item in x for x in actives]))
+    return all(results)
 
