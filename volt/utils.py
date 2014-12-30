@@ -30,9 +30,25 @@ BRIGHTNESS_MAP = {'normal': '00', 'bold': '01'}
 logger = logging.getLogger('util')
 
 
+def get_func_name(func):
+    """Returns the name of the given function object.
+
+    :param func: function object
+    :type func: function
+    :returns: function name
+    :rtype: str
+
+    """
+    if sys.version_info[0] < 3:
+        # Python2 stores function names in func_name
+        return func.func_name
+    # Python3 stores it in __name__
+    return func.__name__
+
+
 def cachedproperty(func):
     """Decorator for cached property loading."""
-    attr_name = func.__name__
+    attr_name = get_func_name(func)
     @property
     def cached(self):
         if not hasattr(self, '_cache'):
