@@ -20,7 +20,7 @@ for containing all internal configurations, and SITE, to contain site-wide
 options. Users may override any value in these Configs by declaring the
 same Config instance in their voltconf.py.
 
-:copyright: (c) 2012 Wibowo Arindrarto <bow@bow.web.id>
+:copyright: (c) 2012-2014 Wibowo Arindrarto <bow@bow.web.id>
 :license: BSD
 
 """
@@ -30,12 +30,11 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 from volt.exceptions import ConfigNotFoundError
-from volt.utils import path_import, LoggableMixin
+from volt.utils import get_func_name, path_import, LoggableMixin
 
 
 DEFAULT_CONF_DIR = os.path.dirname(__file__)
 DEFAULT_CONF = 'default_conf'
-DEFAULT_WIDGET = 'default_widgets'
 
 
 class UnifiedConfigContainer(LoggableMixin):
@@ -113,14 +112,13 @@ class UnifiedConfig(LoggableMixin):
         root_dir = self.get_root_dir(default.VOLT.USER_CONF)
 
         user_conf_fname = default.VOLT.USER_CONF.split('.')[0]
-        user_widget_fname = default.VOLT.USER_WIDGET.split('.')[0]
 
         default.VOLT.USER_CONF = os.path.join(root_dir, \
                 default.VOLT.USER_CONF)
         default.VOLT.USER_WIDGET = os.path.join(root_dir, \
                 default.VOLT.USER_WIDGET)
 
-        # for combining default and user jinja2 filters and tests
+        # store first before being overwritten by consolidation
         default_filters = default.SITE.FILTERS
         default_tests = default.SITE.TESTS
 
@@ -145,42 +143,38 @@ class UnifiedConfig(LoggableMixin):
 
         # set root dir as config in VOLT
         setattr(self.VOLT, 'ROOT_DIR', root_dir)
-
-        self.prep_template(user_widget_fname, default_filters, default_tests)
+        setattr(self.SITE, 'TEMPLATE_ENV',
+                self.make_template_env(default_filters, default_tests))
 
         self.logger.debug('initialized: UnifiedConfig')
 
 
-    def prep_template(self, user_widget_fname, default_filters, default_tests):
-        """Setups the jinja2 template environment."""
+    def make_template_env(self, default_filters, default_tests):
+        """Creates a Jinja2 template environment.
 
+        :param default_filters: Default Jinja2 filters
+        :type default_filters: [filter_function]
+        :param default_tests: Default Jinja2 tests
+        :type default_tests: [test_function]
+        :returns: Jinja2 template environment
+
+        """
         # set up jinja2 template environment in the SITE Config object
         env = Environment(loader=FileSystemLoader(self.VOLT.TEMPLATE_DIR))
-        # combine filters and tests
-        self.SITE.FILTERS = tuple(set(self.SITE.FILTERS + default_filters))
-        self.SITE.TESTS = tuple(set(self.SITE.TESTS + default_tests))
+        # load filters and tests
+        for func_type, default_funcs in \
+                zip(['filters', 'tests'], [default_filters, default_tests]):
+            user_funcs = getattr(self.SITE, func_type.upper(), list())
+            # set default functions first
+            for func in default_funcs + user_funcs:
+                func_name = get_func_name(func)
+                container = getattr(env, func_type)
+                if func_name in container:
+                    self.logger.debug("overwriting existing {0}: '{1}'".format(
+                                      func_type[:-1], func_name))
+                container[func_name] = func
 
-        # import filters and tests
-        default_widget = path_import(DEFAULT_WIDGET, DEFAULT_CONF_DIR)
-        try:
-            user_widget = path_import(user_widget_fname, self.VOLT.ROOT_DIR)
-        except ImportError:
-            # set user_widget to None if the user does not define any widgets
-            # to prevent getattr below from crashing
-            user_widget = None
-
-        for func_type in 'FILTERS', 'TESTS':
-            for func_name in getattr(self.SITE, func_type):
-                # user-defined functions take precedence
-                if hasattr(user_widget, func_name):
-                    func = getattr(user_widget, func_name)
-                else:
-                    func = getattr(default_widget, func_name)
-
-                target = getattr(env, func_type.lower())
-                target[func_name] = func
-
-        setattr(self.SITE, 'TEMPLATE_ENV', env)
+        return env
 
     @classmethod
     def get_root_dir(self, conf_name, start_dir=None):

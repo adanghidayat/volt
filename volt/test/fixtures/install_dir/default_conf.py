@@ -1,5 +1,8 @@
 from volt.config import Config
 
+def foo(arg): pass
+def bar(bar): pass
+
 VOLT = Config(
     USER_CONF = 'voltconf.py',
     USER_WIDGET = 'widgets.py',
@@ -15,6 +18,6 @@ SITE = Config(
     B_URL = 'http://foo.com/',
     C_URL = '/',
     D_URL = '',
-    FILTERS = ('foo', 'bar'),
-    TESTS = (),
+    FILTERS = [foo, bar],
+    TESTS = [],
 )

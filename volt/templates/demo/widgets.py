@@ -1,14 +1,6 @@
 # Volt custom widgets
 
 
-def taglist(tags):
-    """Jinja2 filter for displaying blog tags."""
-    # html string format for each tag
-    format = '<a href="/tag/%s/" class="button red">%s</a>'
-    # return a comma-separated html string containing all tags
-    return ', '.join([format % (tag, tag) for tag in tags])
-
-
 def latest_posts(engine):
     """Engine widget for showing the latest posts.
 

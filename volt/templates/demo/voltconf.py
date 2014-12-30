@@ -5,6 +5,15 @@ import os
 from volt.config import Config
 
 
+# Jinja2 filter
+def taglist(tags):
+    """Jinja2 filter for displaying blog tags."""
+    # html string format for each tag
+    format = '<a href="/tag/%s/" class="button red">%s</a>'
+    # return a comma-separated html string containing all tags
+    return ', '.join([format % (tag, tag) for tag in tags])
+
+
 # General project configurations
 SITE = Config(
 
@@ -29,7 +38,7 @@ SITE = Config(
     ),
 
     # Jinja2 filters
-    FILTERS = ('taglist', ),
+    FILTERS = [taglist],
 )
 
 

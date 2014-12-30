@@ -1,5 +1,7 @@
 from volt.config import Config
 
+def foo(): return "foo in user"
+
 VOLT = Config(
     TEMPLATE_DIR = "mytemplates",
 )
@@ -7,7 +9,7 @@ VOLT = Config(
 SITE = Config(
     CUSTOM_OPT = "custom_opt_user",
     TITLE = "Title in user",
-    FILTERS = ('foo',),
+    FILTERS = [foo],
 )
 
 ENGINE_TEST = Config(

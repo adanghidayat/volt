@@ -62,8 +62,8 @@ SITE = Config(
     WIDGETS = (),
 
     # Jinja2 filter function names
-    FILTERS = (),
+    FILTERS = [],
 
     # Jinja2 test function names
-    TESTS = (),
+    TESTS = [],
 )

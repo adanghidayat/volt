@@ -6,12 +6,13 @@ volt.config.default_conf
 
 Volt default configurations.
 
-:copyright: (c) 2012 Wibowo Arindrarto <bow@bow.web.id>
+:copyright: (c) 2012-2014 Wibowo Arindrarto <bow@bow.web.id>
 :license: BSD
 
 """
 
 from volt.config import Config
+from volt.config.tests import activatedin
 
 
 # Changing values in this Config is allowed but not recommended
@@ -90,9 +91,9 @@ SITE = Config(
     # These are widgets that work on the whole site
     WIDGETS = (),
 
-    # Jinja2 filter function names
-    FILTERS = ('displaytime',),
+    # Jinja2 filter functions
+    FILTERS = [],
 
-    # Jinja2 test function names
-    TESTS = ('activatedin', ),
+    # Jinja2 test functions
+    TESTS = [activatedin],
 )
