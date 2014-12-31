@@ -12,10 +12,11 @@ Tests for the volt.utils module.
 """
 
 import os
+import sys
 import unittest
 from inspect import getabsfile
 
-from volt.utils import path_import
+from volt.utils import path_import, get_func_name
 from volt.test import INSTALL_DIR, USER_DIR
 
 
@@ -34,3 +35,10 @@ class PathImportCases(unittest.TestCase):
         mod = path_import('in_both', paths)
         mod_path = os.path.join(USER_DIR, 'engines', 'in_both.py')
         self.assertEqual(getabsfile(mod), mod_path)
+
+
+class GetFuncNameCases(unittest.TestCase):
+
+    def test_get_func_name(self):
+        def myfunc(): pass
+        self.assertEqual(get_func_name(myfunc), 'myfunc')
