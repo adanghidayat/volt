@@ -306,6 +306,11 @@ class PageCases(unittest.TestCase):
         for case in cases:
             self.assertRaises(ValueError, slugify, case)
 
+    @patch('volt.engine.core.CONFIG', MagicMock())
+    def test_slugify_index(self):
+        slugify = self.page.slugify
+        self.assertEqual(slugify('/'), '')
+
     @patch('volt.engine.core.CONFIG')
     def test_slugify_char_map_ok(self, config_mock):
         slugify = self.page.slugify

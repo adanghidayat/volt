@@ -486,6 +486,11 @@ class Page(LoggableMixin):
         """Returns a slugified version of the given string."""
         string = string.strip()
 
+        # special case, for pages to be displayed in root (string == '/')
+        # return immediately as an empty string
+        if string == '/':
+            return ''
+
         # perform user-defined character mapping
         for target in CONFIG.SITE.SLUG_CHAR_MAP:
             string = string.replace(target, CONFIG.SITE.SLUG_CHAR_MAP[target])
@@ -505,7 +510,7 @@ class Page(LoggableMixin):
 
         # error if slug is empty
         if not string:
-            message = "Slug for '%s' is an empty string." % self.id
+            message = "Slug for '%s' is an empty string after processing." % self.id
             self.logger.error(message)
             raise ValueError(message)
 
