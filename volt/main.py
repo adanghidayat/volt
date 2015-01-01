@@ -21,7 +21,7 @@ from datetime import datetime
 from volt import __version__, generator, server
 from volt.config import CONFIG
 from volt.exceptions import ConfigNotFoundError
-from volt.utils import console, LoggableMixin
+from volt.utils import console, Loggable
 
 
 console = partial(console, format="%s\n", log_time=False)
@@ -36,7 +36,7 @@ class ArgParser(argparse.ArgumentParser):
         sys.exit(1)
 
 
-class Runner(LoggableMixin):
+class Runner(Loggable):
 
     """ Class representing Volt run."""
 

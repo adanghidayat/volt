@@ -26,7 +26,7 @@ from traceback import format_exc
 
 from volt.config import CONFIG, Config
 from volt.exceptions import EmptyUnitsWarning
-from volt.utils import LoggableMixin, cachedproperty, path_import, write_file
+from volt.utils import Loggable, cachedproperty, path_import, write_file
 
 
 # required engine config values
@@ -61,7 +61,7 @@ def chain_item_permalinks(items):
             setattr(item, 'permalink_next', items[idx+1].permalink)
 
 
-class Engine(LoggableMixin):
+class Engine(Loggable):
 
     """Base Volt Engine class.
 
@@ -433,7 +433,7 @@ class Engine(LoggableMixin):
                 write_file(item.path, rendered)
 
 
-class Page(LoggableMixin):
+class Page(Loggable):
 
     """Class representing resources that may have its own web page, such as
     a Unit or a Pack."""

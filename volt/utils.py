@@ -61,7 +61,7 @@ def cachedproperty(func):
     return cached
 
 
-class LoggableMixin(object):
+class Loggable(object):
     """Mixin for adding logging capabilities to classes."""
     @cachedproperty
     def logger(self):

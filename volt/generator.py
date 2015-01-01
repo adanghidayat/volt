@@ -22,13 +22,13 @@ from traceback import format_exc
 
 from volt import __version__
 from volt.config import CONFIG
-from volt.utils import cachedproperty, console, path_import, write_file, LoggableMixin
+from volt.utils import cachedproperty, console, path_import, write_file, Loggable
 
 
 console = partial(console, format="[gen] %s  %s\n")
 
 
-class Site(LoggableMixin):
+class Site(Loggable):
 
     """Class representing a Volt site generation run."""
 

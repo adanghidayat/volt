@@ -30,14 +30,14 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 from volt.exceptions import ConfigNotFoundError
-from volt.utils import get_func_name, path_import, LoggableMixin
+from volt.utils import get_func_name, path_import, Loggable
 
 
 DEFAULT_CONF_DIR = os.path.dirname(__file__)
 DEFAULT_CONF = 'default_conf'
 
 
-class UnifiedConfigContainer(LoggableMixin):
+class UnifiedConfigContainer(Loggable):
 
     """Reloadable, iterable lazy container for UnifiedConfig."""
 
@@ -97,7 +97,7 @@ class UnifiedConfigContainer(LoggableMixin):
             self.logger.debug('reset: UnifiedConfig')
 
 
-class UnifiedConfig(LoggableMixin):
+class UnifiedConfig(Loggable):
 
     """Container class for storing all configurations used in a Volt run.
 

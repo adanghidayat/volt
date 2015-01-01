@@ -40,13 +40,13 @@ from urllib.parse import unquote
 from volt import __version__
 from volt import generator
 from volt.config import CONFIG
-from volt.utils import console, LoggableMixin
+from volt.utils import console, Loggable
 
 
 console = partial(console, format="[srv] %s  %s\n")
 
 
-class VoltHTTPServer(ThreadingTCPServer, LoggableMixin):
+class VoltHTTPServer(ThreadingTCPServer, Loggable):
 
     """A simple multithreading HTTP server for Volt development."""
 
@@ -121,7 +121,7 @@ class VoltHTTPServer(ThreadingTCPServer, LoggableMixin):
         self.server_port = port
 
 
-class VoltHTTPRequestHandler(SimpleHTTPRequestHandler, LoggableMixin):
+class VoltHTTPRequestHandler(SimpleHTTPRequestHandler, Loggable):
 
     """HTTP request handler of the Volt HTTP server.
 
