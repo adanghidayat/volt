@@ -3,6 +3,8 @@
 
 import os
 from volt.config import Config
+from volt.engine.builtins.blog import BlogEngine
+from volt.engine.builtins.plain import PlainEngine
 
 
 # Jinja2 filter
@@ -29,7 +31,7 @@ SITE = Config(
     # The blog engine generates blogs from text files, while the
     # plain engine generates plain web pages
     # To disable an engine, just remove its name from this list
-    ENGINES = ('blog', 'plain', ),
+    ENGINES = (BlogEngine(), PlainEngine()),
 
     # Non-engine widgets
     WIDGETS = (

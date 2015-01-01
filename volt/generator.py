@@ -139,9 +139,9 @@ class Site(LoggableMixin):
             4. Widget creation: widgets for each engine are created and made
                accessible from the any templates.
         """
-        for engine_name in self.config.SITE.ENGINES:
-            engine_class = self.get_processor(engine_name, 'engines')
-            engine = engine_class()
+        for engine in self.config.SITE.ENGINES:
+            engine_class = engine.__class__
+            engine_name = engine.__class__.__name__
             message = "Engine loaded: %s" % engine_name.capitalize()
             console(message, color='cyan')
             self.logger.debug(message)

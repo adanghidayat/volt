@@ -21,7 +21,7 @@ from volt.engine.builtins.text import TextEngine
 ENGINE = 'Blog'
 
 
-class Blog(TextEngine):
+class BlogEngine(TextEngine):
 
     """Engine for processing text files into a blog.
 

@@ -20,7 +20,7 @@ from volt.engine.builtins.text import TextEngine
 ENGINE = 'Plain'
 
 
-class Plain(TextEngine):
+class PlainEngine(TextEngine):
 
     """Class for processing plain web pages."""
 
