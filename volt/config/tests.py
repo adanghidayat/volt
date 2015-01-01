@@ -40,7 +40,7 @@ def activatedin(name, config):
         actives = config._actives
     # _actives not set, then compute it and do a setattr
     except AttributeError:
-        engines = config.SITE.ENGINES
+        engines = tuple([getattr(x, '__class__').__name__ for x in config.SITE.ENGINES])
         plugins = config.SITE.PLUGINS
         widgets = config.SITE.WIDGETS
 

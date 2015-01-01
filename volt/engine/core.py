@@ -488,7 +488,7 @@ class Page(LoggableMixin):
 
         # special case, for pages to be displayed in root (string == '/')
         # return immediately as an empty string
-        if string == '/':
+        if string == '/' or string == '':
             return ''
 
         # perform user-defined character mapping
