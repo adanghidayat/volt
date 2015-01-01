@@ -79,19 +79,19 @@ ENGINE_BLOG = Config(
         #'latest_posts',
     ),
 
-    # The number of displayed posts per pagination page
-    UNITS_PER_PAGINATION = 10,
+    # The number of displayed posts per pack page
+    UNITS_PER_PACK = 10,
 
-    # Excerpt length (in characters) for paginated items
+    # Excerpt length (in characters) for packed items
     EXCERPT_LENGTH = 400,
 
-    # Paginations to build for the static site
-    # Items in this tuple will be used to set the paginations relative to
+    # Packs to build for the static site
+    # Items in this tuple will be used to set the packs relative to
     # the blog URL. Items enclosed in '{}' are pulled from the unit values,
     # e.g. 'tag/{tags}' will be expanded to 'tag/x' for x in each tags in the
     # site. These field tokens must be the last token of the pattern.
-    # Use an empty string ('') to apply pagination to all blog units
-    PAGINATIONS = ('','tag/{tags}', '{time:%Y/%m/%d}', '{time:%Y/%m}', '{time:%Y}'),
+    # Use an empty string ('') to apply pack to all blog units
+    PACKS = ('','tag/{tags}', '{time:%Y/%m/%d}', '{time:%Y/%m}', '{time:%Y}'),
 )
 
 

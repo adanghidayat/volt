@@ -53,11 +53,11 @@ SITE = Config(
     # be present in the default template directory
     PAGES = {},
 
-    # URL to use for pagination
-    # This will be used for paginated items after the first one
-    # For example, if the pagination URL is 'page', then the second
-    # pagination page will have '.../page/2/', the third '.../page/3/', etc.
-    PAGINATION_URL = '',
+    # URL to use for packing
+    # This will be used for packed items after the first one
+    # For example, if the pack URL is 'page', then the second
+    # pack page will have '.../page/2/', the third '.../page/3/', etc.
+    PACK_URL = '',
 
     # Boolean to set if output file names should all be 'index.html' or vary
     # according to the last token in its self.permalist attribute

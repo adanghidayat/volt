@@ -30,7 +30,7 @@ class Blog(TextEngine):
     configuration. They are then chained together by adding to each unit
     permalinks that link to the previous and/or next units.
 
-    It also creates paginations according to the settings in voltconf.py
+    It also creates packs according to the settings in voltconf.py
 
     """
 
@@ -62,27 +62,27 @@ class Blog(TextEngine):
         # File paths of blog template files
         # relative to the default Volt template directory
         UNIT_TEMPLATE = 'blog_unit.html',
-        PAGINATION_TEMPLATE = 'blog_pagination.html',
+        PACK_TEMPLATE = 'blog_pack.html',
 
-        # Sort order for paginated posts display
+        # Sort order for packed posts display
         # Valid options are any field present in all units
         # Default order is A-Z (for alphabets) and past-present (for dates)
         # To reverse order just add '-' in front, e.g. '-time'
         SORT_KEY = '-time',
 
-        # The number of displayed posts per pagination page
-        UNITS_PER_PAGINATION = 10,
+        # The number of displayed posts per pack page
+        UNITS_PER_PACK = 10,
 
-        # Excerpt length (in characters) for paginated items
+        # Excerpt length (in characters) for packed items
         EXCERPT_LENGTH = 400,
 
-        # Pagination to build for the static site
-        # Items in this tuple will be used to set the paginations relative to
+        # Pack to build for the static site
+        # Items in this tuple will be used to set the packs relative to
         # the blog URL. Items enclosed in '{}' are pulled from the unit values,
         # e.g. 'tag/{tags}' will be expanded to 'tag/x' for x in each tags in the
         # site. These field tokens must be the last token of the pattern.
         # Use an empty string ('') to apply packing to all blog units
-        PAGINATIONS = ('',),
+        PACKS = ('',),
 
         # Protected properties
         # These properties must not be defined by any individual blog post header,
@@ -115,4 +115,4 @@ class Blog(TextEngine):
     def dispatch(self):
         # write output files
         self.write_units()
-        self.write_paginations()
+        self.write_packs()

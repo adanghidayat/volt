@@ -6,7 +6,7 @@ volt.engine.core
 
 Volt core engine classes.
 
-Contains the Engine, Page, Unit, and Pagination classes.
+Contains the Engine, Page, Unit, and Pack classes.
 
 :copyright: (c) 2012 Wibowo Arindrarto <bow@bow.web.id>
 :license: BSD
@@ -32,8 +32,8 @@ from volt.utils import LoggableMixin, cachedproperty, path_import, write_file
 # required engine config values
 _REQUIRED_ENGINE_CONFIG = ('URL', 'CONTENT_DIR', 'PERMALINK',)
 
-# required engine config for paginations
-_REQUIRED_ENGINE_PAGINATIONS = ('PAGINATIONS', 'UNITS_PER_PAGINATION',)
+# required engine config for packs
+_REQUIRED_ENGINE_PACKS = ('PACKS', 'UNITS_PER_PACK',)
 
 # regex objects for unit header and permalink processing
 _RE_DELIM = re.compile(r'^---$', re.MULTILINE)
@@ -43,7 +43,7 @@ _RE_MULTIPLE = re.compile(r'[-_.]+')
 _RE_PERMALINK = re.compile(r'(.+?)/+(?!%)')
 
 
-# chain item permalinks, for Engine.units and Engine.paginations
+# chain item permalinks, for Engine.units and Engine.packs
 def chain_item_permalinks(items):
     """Sets the previous and next permalink attributes of items.
 
@@ -170,20 +170,20 @@ class Engine(LoggableMixin):
         self.logger.debug("done: sorting units based on '%s'" % self.config.SORT_KEY)
 
     @cachedproperty
-    def paginations(self):
-        """Paginations of engine units in a dictionary.
+    def packs(self):
+        """Packs of engine units in a dictionary.
 
         The computation will expand the supplied patterns according to the values
         present in all units. For example, if the pattern is '{time:%Y}' and
         there are five units with a datetime.year attribute 2010 and another
-        five with 2011, create_paginations will return a dictionary with one key
-        pointing to a list containing paginations for 'time/2010' and
-        'time/2011'. The number of actual paginations vary, depending on how
-        many units are in one pagination.
+        five with 2011, create_packs will return a dictionary with one key
+        pointing to a list containing packs for 'time/2010' and
+        'time/2011'. The number of actual packs vary, depending on how
+        many units are in one pack.
 
         """
         # check attributes that must exist
-        for attr in _REQUIRED_ENGINE_PAGINATIONS:
+        for attr in _REQUIRED_ENGINE_PACKS:
             try:
                 getattr(self.config, attr)
             except AttributeError:
@@ -194,29 +194,29 @@ class Engine(LoggableMixin):
                 raise
 
         base_url = self.config.URL.strip('/')
-        units_per_pagination = self.config.UNITS_PER_PAGINATION
-        pagination_patterns = self.config.PAGINATIONS
+        units_per_pack = self.config.UNITS_PER_PACK
+        pack_patterns = self.config.PACKS
 
-        # create_paginations operates on self.units
+        # create_packs operates on self.units
         units = self.units
         if not units:
-            warnings.warn("%s has no units to paginate." % type(self).__name__, \
+            warnings.warn("%s has no units to pack." % type(self).__name__, \
                     EmptyUnitsWarning)
             # exit function if there's no units to process
             return {}
 
-        paginator_map = {
-                'all': self._paginate_all,
-                'str': self._paginate_single,
-                'int': self._paginate_single,
-                'float': self._paginate_single,
-                'list': self._paginate_multiple,
-                'tuple': self._paginate_multiple,
-                'datetime': self._paginate_datetime,
+        packer_map = {
+                'all': self._pack_all,
+                'str': self._pack_single,
+                'int': self._pack_single,
+                'float': self._pack_single,
+                'list': self._pack_multiple,
+                'tuple': self._pack_multiple,
+                'datetime': self._pack_datetime,
         }
 
-        paginations = {}
-        for pattern in pagination_patterns:
+        packs = {}
+        for pattern in pack_patterns:
 
             perm_tokens = re.findall(_RE_PERMALINK, pattern.strip('/') + '/')
             base_permalist = [base_url] + perm_tokens
@@ -224,11 +224,11 @@ class Engine(LoggableMixin):
             # only the last token is allowed to be enclosed in '{}'
             for token in base_permalist[:-1]:
                 if '{%s}' % token[1:-1] == token:
-                    message = "Pagination pattern %s is invalid." % pattern
+                    message = "Pack pattern %s is invalid." % pattern
                     self.logger.error(message)
                     raise ValueError(message)
 
-            # determine which paginate method to use based on field type
+            # determine which pack method to use based on field type
             last_token = base_permalist[-1]
             field = last_token[1:-1]
             if '{%s}' % field != last_token:
@@ -238,42 +238,42 @@ class Engine(LoggableMixin):
                 field_type = sample.__class__.__name__
 
             try:
-                paginate = paginator_map[field_type]
+                pack = packer_map[field_type]
             except KeyError:
-                message = "Pagination method for '%s' has not been " \
+                message = "Pack method for '%s' has not been " \
                           "implemented." % field_type
                 self.logger.error(message)
                 self.logger.debug(format_exc())
                 raise
             else:
-                args = [field, base_permalist, units_per_pagination]
-                # if pagination_patterns is a dict, then use the supplied
+                args = [field, base_permalist, units_per_pack]
+                # if pack_patterns is a dict, then use the supplied
                 # title pattern
-                if isinstance(pagination_patterns, dict):
-                    args.append(pagination_patterns[pattern])
+                if isinstance(pack_patterns, dict):
+                    args.append(pack_patterns[pattern])
 
-                pagination_in_pattern = paginate(*args)
+                pack_in_pattern = pack(*args)
                 key = '/'.join(base_permalist)
-                paginations[key] = pagination_in_pattern
+                packs[key] = pack_in_pattern
 
-        return paginations
+        return packs
 
-    def _paginate_all(self, field, base_permalist, units_per_pagination, \
+    def _pack_all(self, field, base_permalist, units_per_pack, \
             title_pattern=''):
-        """Create paginations for all field values (PRIVATE)."""
-        paginated = self._paginator(self.units, base_permalist, \
-                units_per_pagination, title_pattern)
+        """Create packs for all field values (PRIVATE)."""
+        packed = self._packer(self.units, base_permalist, \
+                units_per_pack, title_pattern)
 
-        self.logger.debug('created: %d %s paginations' % (len(paginated), 'all'))
-        return paginated
+        self.logger.debug('created: %d %s packs' % (len(packed), 'all'))
+        return packed
 
-    def _paginate_single(self, field, base_permalist, units_per_pagination, \
+    def _pack_single(self, field, base_permalist, units_per_pack, \
             title_pattern=''):
-        """Create paginations for string/int/float header field values (PRIVATE)."""
+        """Create packs for string/int/float header field values (PRIVATE)."""
         units = self.units
         str_set = set([getattr(x, field) for x in units])
 
-        paginated = []
+        packed = []
         for item in str_set:
             matches = [x for x in units if item == getattr(x, field)]
             base_permalist = base_permalist[:-1] + [str(item)]
@@ -281,21 +281,21 @@ class Engine(LoggableMixin):
                 title = title_pattern % str(item)
             else:
                 title = title_pattern
-            pagin = self._paginator(matches, base_permalist, \
-                    units_per_pagination, title)
-            paginated.extend(pagin)
+            pack = self._packer(matches, base_permalist, \
+                    units_per_pack, title)
+            packed.extend(pack)
 
-        self.logger.debug('created: %d %s paginations' % (len(paginated), field))
-        return paginated
+        self.logger.debug('created: %d %s packs' % (len(packed), field))
+        return packed
 
-    def _paginate_multiple(self, field, base_permalist, units_per_pagination, \
+    def _pack_multiple(self, field, base_permalist, units_per_pack, \
             title_pattern=''):
-        """Create paginations for list or tuple header field values (PRIVATE)."""
+        """Create packs for list or tuple header field values (PRIVATE)."""
         units = self.units
         item_list_per_unit = (getattr(x, field) for x in units)
         item_set = reduce(set.union, [set(x) for x in item_list_per_unit])
 
-        paginated = []
+        packed = []
         for item in item_set:
             matches = [x for x in units if item in getattr(x, field)]
             base_permalist = base_permalist[:-1] + [str(item)]
@@ -303,29 +303,29 @@ class Engine(LoggableMixin):
                 title = title_pattern % str(item)
             else:
                 title = title_pattern
-            pagin = self._paginator(matches, base_permalist, \
-                    units_per_pagination, title)
-            paginated.extend(pagin)
+            pack = self._packer(matches, base_permalist, \
+                    units_per_pack, title)
+            packed.extend(pack)
 
-        self.logger.debug('created: %d %s paginations' % (len(paginated), field))
-        return paginated
+        self.logger.debug('created: %d %s packs' % (len(packed), field))
+        return packed
 
-    def _paginate_datetime(self, field, base_permalist, \
-            units_per_pagination, title_pattern=''):
-        """Create paginations for datetime header field values (PRIVATE)."""
+    def _pack_datetime(self, field, base_permalist, \
+            units_per_pack, title_pattern=''):
+        """Create packs for datetime header field values (PRIVATE)."""
         units = self.units
         # separate the field name from the datetime formatting
         field, time_fmt = field.split(':')
         time_tokens = time_fmt.strip('/').split('/')
         unit_times = [getattr(x, field) for x in units]
         # construct set of all datetime combinations in units according to
-        # the user's supplied pagination URL; e.g. if URL == '%Y/%m' and
+        # the user's supplied pack URL; e.g. if URL == '%Y/%m' and
         # there are two units with 2009/10 and one with 2010/03 then
         # time_set == set([('2009', '10), ('2010', '03'])
         time_strs = [[x.strftime(y) for x in unit_times] for y in time_tokens]
         time_set = set(zip(*time_strs))
 
-        paginated = []
+        packed = []
         # create placeholders for new tokens
         base_permalist = base_permalist[:-1] + [None] * len(time_tokens)
         for item in time_set:
@@ -344,47 +344,47 @@ class Engine(LoggableMixin):
                 title = getattr(matches[0], field).strftime(title_pattern)
             else:
                 title = title_pattern
-            pagin = self._paginator(matches, base_permalist, \
-                    units_per_pagination, title)
-            paginated.extend(pagin)
+            pack = self._packer(matches, base_permalist, \
+                    units_per_pack, title)
+            packed.extend(pack)
 
-        self.logger.debug('created: %d %s paginations' % (len(paginated), field))
-        return paginated
+        self.logger.debug('created: %d %s packs' % (len(packed), field))
+        return packed
 
-    def _paginator(self, units, base_permalist, units_per_pagination, title=''):
-        """Create paginations from units (PRIVATE).
+    def _packer(self, units, base_permalist, units_per_pack, title=''):
+        """Create packs from units (PRIVATE).
 
-        units -- List of all units which will be paginated.
+        units -- List of all units which will be packed.
         base_permalist -- List of permalink tokens that will be used by all
-                          paginations of the given units.
-        units_per_pagination -- Number of units to show per pagination.
-        title -- String to use as the pagination title.
+                          packs of the given units.
+        units_per_pack -- Number of units to show per pack.
+        title -- String to use as the pack title.
 
         """
-        paginations = []
+        packs = []
 
-        # count how many paginations we need
-        is_last = len(units) % units_per_pagination != 0
-        pagination_len = len(units) // units_per_pagination + int(is_last)
+        # count how many packs we need
+        is_last = len(units) % units_per_pack != 0
+        pack_len = len(units) // units_per_pack + int(is_last)
 
-        # construct pagination objects for each pagination page
-        for idx in range(pagination_len):
-            start = idx * units_per_pagination
-            if idx != pagination_len - 1:
-                stop = (idx + 1) * units_per_pagination
-                units_in_pagination = units[start:stop]
+        # construct pack objects for each pack page
+        for idx in range(pack_len):
+            start = idx * units_per_pack
+            if idx != pack_len - 1:
+                stop = (idx + 1) * units_per_pack
+                units_in_pack = units[start:stop]
             else:
-                units_in_pagination = units[start:]
+                units_in_pack = units[start:]
 
-            pagination = Pagination(units_in_pagination, idx, base_permalist, \
+            pack = Pack(units_in_pack, idx, base_permalist, \
                     title)
-            paginations.append(pagination)
+            packs.append(pack)
 
-        if len(paginations) > 1:
-            chain_item_permalinks(paginations)
-            self.logger.debug('done: chaining paginations')
+        if len(packs) > 1:
+            chain_item_permalinks(packs)
+            self.logger.debug('done: chaining packs')
 
-        return paginations
+        return packs
 
     def write_units(self):
         """Writes units using the unit template file."""
@@ -392,11 +392,11 @@ class Engine(LoggableMixin):
         self.logger.debug('written: %d %s unit(s)' % (len(self.units), \
                 type(self).__name__[:-len('Engine')]))
 
-    def write_paginations(self):
-        """Writes paginations using the pagination template file."""
-        for pattern in self.paginations:
-            self._write_items(self.paginations[pattern], self.config.PAGINATION_TEMPLATE)
-            self.logger.debug("written: '%s' pagination(s)" % pattern)
+    def write_packs(self):
+        """Writes packs using the pack template file."""
+        for pattern in self.packs:
+            self._write_items(self.packs[pattern], self.config.PACK_TEMPLATE)
+            self.logger.debug("written: '%s' pack(s)" % pattern)
 
     def _write_items(self, items, template_path):
         """Writes Page objects using the given template file (PRIVATE).
@@ -436,7 +436,7 @@ class Engine(LoggableMixin):
 class Page(LoggableMixin):
 
     """Class representing resources that may have its own web page, such as
-    a Unit or a Pagination."""
+    a Unit or a Pack."""
 
     __metaclass__ = abc.ABCMeta
 
@@ -664,33 +664,33 @@ class Unit(Page):
         return list(set(filter(None, field.strip().split(sep))))
 
 
-class Pagination(Page):
+class Pack(Page):
 
-    """Class representing a single paginated HTML file.
+    """Class representing a single packed HTML file.
 
-    The pagination class computes the necessary attributes required to write
+    The pack class computes the necessary attributes required to write
     a single HTML file containing the desired units. It is the __dict__ object
-    of this Pagination class that will be passed on to the template writing
-    environment. The division of which units go to which pagination
+    of this Pack class that will be passed on to the template writing
+    environment. The division of which units go to which pack
     page is done by another method.
 
     """
 
-    def __init__(self, units, pagin_idx, base_permalist=[], title=None):
-        """Initializes a Pagination instance.
+    def __init__(self, units, pack_idx, base_permalist=[], title=None):
+        """Initializes a Pack instance.
 
-        units -- List containing units to paginate.
-        pagin_idx -- Number of current pagination object index.
-        base_permalist -- List of URL components common to all pagination
+        units -- List containing units to pack.
+        pack_idx -- Number of current pack object index.
+        base_permalist -- List of URL components common to all pack
                           permalinks.
-        title -- String denoting the title of the pagination page.
+        title -- String denoting the title of the pack page.
 
         """
         self.units = units
         self.title = title
 
-        # since paginations are 1-indexed
-        self.pagin_idx = pagin_idx + 1
+        # since packs are 1-indexed
+        self.pack_idx = pack_idx + 1
         # precautions for empty string, so double '/'s are not introduced
         self.base_permalist = list(filter(None, base_permalist))
         self.logger.debug('created: %s' % self.id)
@@ -703,9 +703,9 @@ class Pagination(Page):
     def permalist(self):
         """Returns a list of strings which will be used to construct permalinks."""
         permalist = self.base_permalist
-        # add pagination url and index if it's not the first pagination page
-        if self.pagin_idx > 1:
-            permalist += list(filter(None, [CONFIG.SITE.PAGINATION_URL, \
-                    str(self.pagin_idx)]))
+        # add pack url and index if it's not the first pack page
+        if self.pack_idx > 1:
+            permalist += list(filter(None, [CONFIG.SITE.PACK_URL, \
+                    str(self.pack_idx)]))
 
         return permalist
