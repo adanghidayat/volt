@@ -1,0 +1,2 @@
+[run]
+omit = volt/config/defaults.py

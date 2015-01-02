@@ -1,8 +1,31 @@
 #!/usr/bin/env python
 
+import sys
+
 from setuptools import setup, find_packages
+from setuptools.command.test import test as TestCommand
 
 from volt import __version__
+
+
+# per http://pytest.org/latest/goodpractises.html
+class PyTest(TestCommand):
+
+    user_options = [('pytest-args=', 'a', "Arguments to pass to py.test")]
+
+    def initialize_options(self):
+        TestCommand.initialize_options(self)
+        self.pytest_args = []
+
+    def finalize_options(self):
+        TestCommand.finalize_options(self)
+        self.test_args = []
+        self.test_suite = True
+
+    def run_tests(self):
+        import pytest
+        errno = pytest.main(self.pytest_args)
+        sys.exit(errno)
 
 
 install_requires = [
@@ -36,11 +59,12 @@ setup(
         "textile": ["textile>=2.1.5"],
         "syntax highlight": ["pygments>=1.4,<=1.5"],
     },
-    test_suite='nose.collector',
-    tests_require=[
-        'nose>=1.1.2',
+    tests_require = [
+        'pytest==2.6.4',
+        'pytest-cov==1.8.1',
         'mock>=0.8.0',
     ],
+    cmdclass = {'test': PyTest},
     zip_safe = False,
     entry_points = """
     [console_scripts]
