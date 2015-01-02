@@ -6,7 +6,7 @@ volt.utils
 
 Collection of general handy methods used throughout Volt.
 
-:copyright: (c) 2012 Wibowo Arindrarto <bow@bow.web.id>
+:copyright: (c) 2012-2014 Wibowo Arindrarto <bow@bow.web.id>
 :license: BSD
 
 """
@@ -33,9 +33,9 @@ logger = logging.getLogger('util')
 def get_func_name(func):
     """Returns the name of the given function object.
 
-    :param func: function object
+    :param func: Function object
     :type func: function
-    :returns: function name
+    :returns: Function name
     :rtype: str
 
     """
@@ -63,25 +63,27 @@ def cachedproperty(func):
 
 class Loggable(object):
     """Mixin for adding logging capabilities to classes."""
+
     @cachedproperty
     def logger(self):
         return logging.getLogger(type(self).__name__)
 
 
-def time_string():
-    """Returns string for logging time."""
-    time = datetime.now()
-    format = "%02d:%02d:%02d.%03.0f"
-    return format % (time.hour, time.minute, time.second, \
+def time_string(time):
+    """Returns a string representation of the given time."""
+    fmt = "{:02d}:{:02d}:{:02d}.{:03.0f}"
+    return fmt.format(time.hour, time.minute, time.second, \
             (time.microsecond / 1000.0 + 0.5))
 
 
 def path_import(name, paths):
     """Imports a module from the specified path.
 
-    name -- String denoting target module name.
-    paths -- List of possible absolute directory paths or string of an
-        absolute directory path that may contain the target module.
+    :param name: Target module name
+    :type name: str
+    :param paths: Absolute directory path(s) to look for the import
+    :type paths: str or [str]
+    :returns: Imported module
 
     """
     # convert to list if paths is string
@@ -94,42 +96,55 @@ def path_import(name, paths):
     return imp.load_module(name, *mod_tuple)
 
 
-def console(string, format=None, color='grey', is_bright=False, log_time=True):
+def console(text, fmt=None, color='grey', is_bright=False, log_time=True):
     """Formats the given string for console display.
 
-    string -- String to display.
-    format -- String to format the given string. Must include an extra '%s'
-              for log_time() value if 'log_time' is True.
-    color -- String indicating color.
-    is_bright -- Boolean indicating whether to return a bright version of the
-                 colored string or not.
-    log_time -- Boolean indicating whether to log time or not.
+    :param text: Text to display
+    :type text: str
+    :param fmt: Format string (with `.format`). Must contain '{text}' as text
+                placeholder. If ``log_time`` is True, must also contain
+                '{time}' as time placeholder.
+    :type fmt: str
+    :param color: Color to display. Possible values are black, red, green,
+                  yellow, blue, violet, cyan, or grey.
+    :type color: str
+    :param is_bright: Whether to display bright text or not
+    :type is_bright: bool
+    :param log_time: Whether to include time information in or not
+    :type log_time: bool
+    :returns: Colored text for console display
+    :rtype: str
+    :raises ValueError: if '{text}' placeholder is missing and/or '{time}'
+                        placeholder is missing when ``log_time`` is True
 
     """
     if format is not None:
+        if '{text}' not in text:
+            raise ValueError("Missing '{text}' placeholder for console display.")
         if log_time:
-            string = format % (time_string(), string)
+            if '{time}' not in text:
+                raise ValueError("Missing '{time}' placeholder for console display.")
+            string = fmt.format(time=time_string(datetime.now()), text=text)
         else:
-            string = format % string
+            string = fmt.format(text=text)
 
     if os.name != 'nt':
         brg = 'bold' if is_bright else 'normal'
-        string = "\033[%s;%sm%s\033[m" % (BRIGHTNESS_MAP[brg], \
-                COLOR_MAP[color], string)
+        text = "\033[{0};{1}m{2}\033[m".format(BRIGHTNESS_MAP[brg], \
+                                                 COLOR_MAP[color], string)
 
-    sys.stdout.write(string)
+    sys.stdout.write(text)
 
 
 def write_file(file_path, text, bufsize=16384):
     """Writes the given text to a target file path.
 
-    :param file_path: absolute file path of target file
+    :param file_path: Absolute file path of target file
     :type file_path: str
-    :param text: text contents to write
+    :param text: Text contents to write
     :type text: str
-    :param bufsize: buffer size when writing to file (default: 16384)
+    :param bufsize: Buffer size when writing to file (default: 16384)
     :type bufsize: int
-    :returns: None
 
     """
     try:
@@ -141,7 +156,6 @@ def write_file(file_path, text, bufsize=16384):
             target = open(file_path, 'w', bufsize)
         else:
             raise
-
     # will only be reached when we get a writable target
     target.write(text)
     target.close()
