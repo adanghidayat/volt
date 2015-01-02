@@ -111,10 +111,9 @@ class SiteConfig(Loggable):
     def _adjust_config(config, user_dir):
         for key in config:
             if key.endswith('_DIR'):
-                val = config[key]
-                if user_dir:
-                    val = val.lstrip(path.sep)
-                config[key] = path.join(user_dir, val).rstrip(path.sep)
+                if not path.isabs(val):
+                    val = path.join(user_dir, val)
+                config[key] = val.rstrip(path.sep)
             elif key.endswith('URL'):
                 config[key] = config[key].strip('/')
         return config

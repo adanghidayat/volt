@@ -16,10 +16,10 @@ from volt.config import SiteConfig
         {'a': 1, 'OUT_DIR': '/tmp/site'}),
     ({'a': 1, 'OUT_DIR': 'site/'}, '/tmp/',
         {'a': 1, 'OUT_DIR': '/tmp/site'}),
-    ({'a': 1, 'OUT_DIR': '/site'}, '/tmp/',
-        {'a': 1, 'OUT_DIR': '/tmp/site'}),
-    ({'a': 1, 'OUT_DIR': '/site/'}, '/tmp/',
-        {'a': 1, 'OUT_DIR': '/tmp/site'}),
+    ({'a': 1, 'OUT_DIR': '/my/own/path/'}, '/tmp/',
+        {'a': 1, 'OUT_DIR': '/my/own/path'}),
+    ({'a': 1, 'OUT_DIR': '/my/own/path'}, '/tmp/',
+        {'a': 1, 'OUT_DIR': '/my/own/path'}),
 ])
 def test_siteconfig_adjust_config(config, user_dir, expected):
     assert SiteConfig._adjust_config(config, user_dir) == expected
