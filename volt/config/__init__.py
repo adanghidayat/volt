@@ -12,7 +12,6 @@ Volt configuration container module.
 """
 
 import os
-import sys
 from os import path
 
 from volt.exceptions import ConfigNotFoundError
@@ -77,6 +76,7 @@ class SiteConfigContainer(Loggable):
         self.logger.debug('loaded: SiteConfig')
 
     def reset(self):
+        """Unloads all loaded configuration values."""
         if self._loaded is not None:
             self._loaded = None
             self._confs = None
@@ -109,23 +109,56 @@ class SiteConfig(Loggable):
 
     @staticmethod
     def _adjust_config(config, user_dir):
-        for key in config:
+        """Adjusts the values of keys contained in config for consistency.
+
+        The adjustments are:
+
+        * All keys ending with `_DIR` are made into absolute directory paths
+          by prefixing them the ``user_dir``. If the key value is already an
+          absolute path, ``user_dir`` has no effect.
+
+        * All keys ending with `URL` are stripped of their preceding and
+          succeeding slash ('/').
+
+        :param config: Configuration key-value pairs
+        :type config: dict
+        :param user_dir: Absolute path to Volt root directory
+        :type user_dir: str
+        :returns: Adjusted configuration
+        :rtype: dict
+
+        """
+        for key, val in config.items():
             if key.endswith('_DIR'):
                 if not path.isabs(val):
                     val = path.join(user_dir, val)
                 config[key] = val.rstrip(path.sep)
             elif key.endswith('URL'):
-                config[key] = config[key].strip('/')
+                config[key] = val.strip('/')
         return config
 
     @staticmethod
     def _load_config(mod):
+        """Loads all config values from the given module.
+
+        Config values are contained in all uppercase keys.
+
+        :param mod: Module to load configurations from
+        :type mod: module object
+        :returns: Configuration key-value pairs
+        :rtype: dict
+
+        """
         # TODO: remove Python2.6 compatibility
         return dict([(k, getattr(mod, k)) for k in dir(mod) if k.upper() == k])
 
     @staticmethod
     def _get_root_dir(conf_name, start_dir=None):
-        """Returns the root directory of a Volt app.
+        """Computes the root directory of a Volt app.
+
+        Checks the current directory for a Volt config file. If it is not
+        present, parent directories of the current directory is checked until
+        a Volt configuration file is found.
 
         :param conf_name: user configuration filename
         :type conf_name: str
@@ -133,11 +166,8 @@ class SiteConfig(Loggable):
         :type start_dir: str
         :returns: path to root directory of a Volt app
         :rtype: str
-
-        Checks the current directory for a Volt config file. If it is not
-        present, parent directories of the current directory is checked until
-        a Volt settings file is found. If no Volt settings file is found up to
-        '/', ConfigNotFoundError is raised.
+        :raises ConfigNotFoundError: if no Volt configuration file is found
+                                     up to the root filesystem directory
 
         """
         if start_dir is None:

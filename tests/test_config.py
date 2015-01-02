@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+-----------------
+tests.test_config
+-----------------
+
+:copyright: (c) 2012-2014 Wibowo Arindrarto <bow@bow.web.id>
+:license: BSD
+
+"""
+
 from types import ModuleType
 
 import pytest
