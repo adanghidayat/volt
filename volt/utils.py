@@ -90,51 +90,41 @@ def path_import(name, paths):
     return imp.load_module(name, *mod_tuple)
 
 
-def console(text, fmt=None, color='grey', is_bright=False, log_time=True,
-            time_fmt='{H:02d}:{M:02d}:{S:02d}.{f:03.0f}'):
+def console(text, color=None, is_bright=False, log_time=True,
+            time_fmt='%H:%M:%S'):
     """Formats the given string for console display.
+
+    If ``log_time`` is True, a time string (according to ``time_fmt``) is
+    prepended to the given text.
 
     :param text: Text to display
     :type text: str
-    :param fmt: Format string (with `.format`). Must contain '{text}' as text
-                placeholder. If ``log_time`` is True, must also contain
-                '{time}' as time placeholder.
-    :type fmt: str
     :param color: Color to display. Possible values are black, red, green,
                   yellow, blue, violet, cyan, or grey.
     :type color: str
     :param is_bright: Whether to display bright text or not
     :type is_bright: bool
-    :param log_time: Whether to include time information in or not
+    :param log_time: Whether to include time information or not
     :type log_time: bool
-    :param time_fmt: Format of the time string
+    :param time_fmt: Format of the time string (following the directives of
+                     :meth:`~datetime.datetime.strftime`)
     :type time_fmt: str
     :returns: Colored text for console display
     :rtype: str
-    :raises ValueError: if '{text}' placeholder is missing and/or '{time}'
-                        placeholder is missing when ``log_time`` is True
 
     """
-    if format is not None:
-        if '{text}' not in text:
-            raise ValueError("Missing '{text}' placeholder for console "
-                             "display.")
-        if log_time:
-            if '{time}' not in text:
-                raise ValueError("Missing '{time}' placeholder for console "
-                                 "display.")
-            now = datetime.now()
-            time_str = time_fmt.format(H=now.hour, M=now.minute, S=now.second,
-                                       f=now.microsecond / 1000.0 + 0.5)
-            string = fmt.format(time=time_str, text=text)
-        else:
-            string = fmt.format(text=text)
+    if log_time:
+        time_str = datetime.now().strftime(time_fmt)
+        text = time_str + ' ' + text
 
-    if os.name != 'nt':
+    if is_bright and color is None:
+        color = 'grey'
+
+    if os.name != 'nt' and color is not None:
         brg = 'bold' if is_bright else 'normal'
-        text = "\033[{0};{1}m{2}\033[m".format(BRIGHTNESS_MAP[brg], \
-                                                 COLOR_MAP[color], string)
-
+        text = '\033[{bg};{fg}m{text}\033[m'.format(bg=BRIGHTNESS_MAP[brg],
+                                                    fg=COLOR_MAP[color],
+                                                    text=text)
     print(text, file=sys.stdout)
 
 
