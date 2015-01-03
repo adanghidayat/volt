@@ -10,14 +10,19 @@ tests.test_utils
 """
 
 import os
+import stat
 import sys
+from datetime import datetime
 from os import path
 from tempfile import NamedTemporaryFile, gettempdir
 from types import ModuleType
+from uuid import uuid4
 
-from testfixtures import LogCapture
+import pytest
+from testfixtures import LogCapture, OutputCapture
 
-from volt.utils import get_func_name, cachedproperty, Loggable, path_import
+from volt.utils import get_func_name, cachedproperty, Loggable, path_import, \
+                       console, write_file
 
 
 # helper function for path_import testing
@@ -101,3 +106,87 @@ def test_path_import_reload():
     sys.dont_write_bytecode = False
     assert imported.x == 2
     os.unlink(f.name)
+
+
+def test_console():
+    time_fmt = '%H:%M:%S'
+    with OutputCapture() as oc:
+        console('x')
+        console('y')
+    captured = oc.captured.strip().split(os.linesep)
+    assert len(captured) == 2
+    time1, text1 = captured[0].split(' ')
+    assert datetime.strptime(time1, time_fmt)
+    assert text1 == 'x'
+    time2, text2 = captured[1].split(' ')
+    assert datetime.strptime(time2, time_fmt)
+    assert text2 == 'y'
+
+
+def test_console_custom_time():
+    time_fmt = '%H:%M'
+    with OutputCapture() as oc:
+        console('x', time_fmt=time_fmt)
+    captured = oc.captured.strip().split(os.linesep)
+    assert len(captured) == 1
+    time, text = captured[0].split(' ')
+    assert datetime.strptime(time, time_fmt)
+    assert text == 'x'
+
+
+def test_console_no_log_time():
+    with OutputCapture() as oc:
+        console('a', log_time=False)
+        console('b', log_time=False)
+    oc.compare('\n'.join(['a', 'b']))
+
+
+def test_console_bright():
+    # disable time logging to make for easier comparison
+    with OutputCapture() as oc:
+        console('p', is_bright=True, log_time=False)
+    oc.compare('\033[01;37mp\033[m')
+
+
+def test_console_color():
+    # disable time logging to make for easier comparison
+    with OutputCapture() as oc:
+        console('q', color='green', log_time=False)
+    oc.compare('\033[00;32mq\033[m')
+
+
+def test_write_file_existing_dir():
+    f = path.join(gettempdir(), 'volt-' + str(uuid4()))
+    try:
+        write_file(f, 'a')
+        with open(f, 'r') as src:
+            assert src.read() == 'a'
+    finally:
+        if path.exists(f):
+            os.unlink(f)
+
+
+def test_write_file_nonexisting_dir():
+    uuid = str(uuid4())
+    f = path.join(gettempdir(), uuid, 'volt-' + uuid)
+    assert not path.exists(path.dirname(f))
+    try:
+        write_file(f, 'a')
+        with open(f, 'r') as src:
+            assert src.read() == 'a'
+    finally:
+        if path.exists(f):
+            os.unlink(f)
+
+
+def test_write_file_nonmissing_ioerror():
+    uuid = str(uuid4())
+    d = path.join(gettempdir(), uuid)
+    assert not path.exists(d)
+    os.makedirs(d)
+    # make dir read-only to trigger IOError not caused by missing file
+    os.chmod(d, stat.S_IREAD)
+    f = path.join(d, 'volt-' + uuid)
+    with pytest.raises(IOError):
+        write_file(f, 'a')
+    os.rmdir(d)
