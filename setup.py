@@ -29,9 +29,9 @@ class PyTest(TestCommand):
 
 
 install_requires = [
-    "future>=0.14.3",
-    "Jinja2>=2.6",
-    "Markdown>=2.3.1,<2.5",
+    "future==0.14.3",
+    "Jinja2==2.7.3",
+    "Markdown==2.4.1",
 ]
 long_description = open("README.rst").read()
 
@@ -55,14 +55,15 @@ setup(
     include_package_data = True,
     install_requires = install_requires,
     extras_require = {
-        "rst": ["docutils>=0.8.1"],
-        "textile": ["textile>=2.1.5"],
-        "syntax highlight": ["pygments>=1.4,<=1.5"],
+        "rst": ["docutils==0.8.1"],
+        "textile": ["textile==2.1.5"],
+        "syntax highlight": ["pygments==1.5"],
     },
     tests_require = [
         'pytest==2.6.4',
         'pytest-cov==1.8.1',
-        'mock>=0.8.0',
+        'mock==1.0.1',
+        'testfixtures==4.1.1',
     ],
     cmdclass = {'test': PyTest},
     zip_safe = False,
