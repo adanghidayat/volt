@@ -6,10 +6,12 @@ python:
   - "3.4"
 
 install:
-  - python setup.py install
-
-before_script:
-  - "if [[ $TRAVIS_PYTHON_VERSION == '3.3' || $TRAVIS_PYTHON_VERSION = '3.4' ]]; then export VOLT_TEST_DIR=build/lib/volt/test; else export VOLT_TEST_DIR=volt/test; fi"
+  - pip install coveralls --use-wheel
+  - pip install .
+  - pip install -r dev-requirements.txt
 
 script:
-  - nosetests $VOLT_TEST_DIR
+  - py.test --cov-report term --cov volt tests/
+
+after_success:
+  - coveralls

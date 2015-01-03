@@ -1,14 +1,4 @@
-coverage
-mock
-nose
-docutils
-textile
-markdown
-pygments
-
-#setup.py develop
--e .
-
-# optional dev dependencies
-# Sphinx
-# tox
+pytest==2.6.4
+pytest-cov==1.8.1
+mock==1.0.1
+testfixtures==4.1.1

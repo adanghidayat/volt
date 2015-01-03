@@ -28,12 +28,14 @@ class PyTest(TestCommand):
         sys.exit(errno)
 
 
-install_requires = [
-    "future==0.14.3",
-    "Jinja2==2.7.3",
-    "Markdown==2.4.1",
-]
-long_description = open("README.rst").read()
+with open('README.rst') as src:
+    long_description = src.read()
+
+with open('requirements.txt') as src:
+    install_requires = [line.strip() for line in src]
+
+with open('dev-requirements.txt') as src:
+    tests_require = [line.strip() for line in src]
 
 # handle dependencies for python2.x (x < 7)
 try:
@@ -59,12 +61,7 @@ setup(
         "textile": ["textile==2.1.5"],
         "syntax highlight": ["pygments==1.5"],
     },
-    tests_require = [
-        'pytest==2.6.4',
-        'pytest-cov==1.8.1',
-        'mock==1.0.1',
-        'testfixtures==4.1.1',
-    ],
+    tests_require = tests_require,
     cmdclass = {'test': PyTest},
     zip_safe = False,
     entry_points = """
