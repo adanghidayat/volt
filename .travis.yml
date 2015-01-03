@@ -7,7 +7,7 @@ python:
 
 install:
   - pip install coveralls --use-wheel
-  - pip install .
+  - python setup.py develop
   - pip install -r dev-requirements.txt
 
 script:
