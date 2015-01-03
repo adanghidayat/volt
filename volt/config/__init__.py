@@ -11,8 +11,12 @@ Volt configuration container module.
 
 """
 
+from future.standard_library import install_aliases
+install_aliases()
+
 import os
 from os import path
+from collections import UserDict
 
 from volt.exceptions import ConfigNotFoundError
 from volt.utils import path_import, Loggable
@@ -24,52 +28,30 @@ DEFAULT_CONF = 'defaults'
 
 class SiteConfigContainer(Loggable):
 
-    """Reloadable, iterable lazy container for SiteConfig."""
+    """Reloadable lazy container for SiteConfig."""
 
     def __init__(self):
         self._loaded = None
-        self._confs = None
 
-    def __getattr__(self, name):
+    def __getitem__(self, key):
         if self._loaded is None:
             self._load()
-        return getattr(self._loaded, name)
+        return self._loaded[key]
 
-    def __setattr__(self, name, value):
-        if name in ['_loaded', '_confs']:
-            self.__dict__[name] = value
-        else:
-            if self._loaded is None:
-                self._load()
-            setattr(self._loaded, name, value)
-
-    def __dir__(self):
+    def __setitem__(self, key, value):
         if self._loaded is None:
             self._load()
-        return dir(self._loaded)
+        self._loaded[key] = value
 
-    def __iter__(self):
-        if self._confs is None:
-            self._confs = []
-            for item in dir(self._loaded):
-                # config objects are all caps
-                # so we can shortcut the test instead of isinstance
-                if item  == item.upper():
-                    self._confs.append(getattr(self._loaded, item))
-        return self
-
-    def next(self):
-        return self.__next__()
-
-    def __next__(self):
+    def __delitem__(self, key):
         if self._loaded is None:
             self._load()
-        try:
-            return self._confs.pop()
-        except IndexError:
-            # reset for next iteration
-            self._confs = None
-            raise StopIteration
+        del self._loaded[key]
+
+    def __contains__(self, key):
+        if self._loaded is None:
+            self._load()
+        return key in self._loaded
 
     def _load(self):
         self._loaded = SiteConfig()
@@ -79,11 +61,10 @@ class SiteConfigContainer(Loggable):
         """Unloads all loaded configuration values."""
         if self._loaded is not None:
             self._loaded = None
-            self._confs = None
             self.logger.debug('reset: SiteConfig')
 
 
-class SiteConfig(Loggable):
+class SiteConfig(UserDict, Loggable):
 
     """Container class for storing all configurations used in a Volt site.
 
@@ -92,19 +73,31 @@ class SiteConfig(Loggable):
 
     """
 
-    def __init__(self):
-        defaults = path_import(DEFAULT_CONF, DEFAULT_CONF_DIR)
+    def __init__(self, default_conf=DEFAULT_CONF,
+                 default_conf_dir=DEFAULT_CONF_DIR):
+        """Initializes SiteConfig.
+
+        :param default_conf: Base file name of default configurations file.
+                             Defaults to `defaults`.
+        :type default_conf: str
+        :param default_conf_dir: Directory where the default configurations
+                                 file is located.
+        :type default_conf_dir: str
+
+        """
+        defaults = path_import(default_conf, default_conf_dir)
         config = SiteConfig._load_config(defaults)
 
-        user_dir = self.get_root_dir(config['_USER_FILE'])
-        user_conf = config['_USER_FILE'].split('.')[0]
+        user_dir = SiteConfig._get_root_dir(config['_USER_CONF'])
+        user_conf = config['_USER_CONF'].split('.')[0]
         user_mod = path_import(user_conf, user_dir)
         user_config = SiteConfig._load_config(user_mod)
 
-        config.update(user_config, user_dir)
+        config.update(user_config)
+        print(config.keys())
         config['_ROOT_DIR'] = user_dir
 
-        self.__dict__ = config
+        UserDict.__init__(self, config)
         self.logger.debug('initialized: SiteConfig')
 
     @staticmethod
@@ -175,8 +168,7 @@ class SiteConfig(Loggable):
 
         # raise error if search goes all the way to root without any results
         if path.dirname(start_dir) == start_dir:
-            raise ConfigNotFoundError("Failed to find Volt config file in "
-                    "'{0}' or its parent directories.".format(os.getcwd()))
+            raise ConfigNotFoundError("Failed to find Volt config file.")
 
         # recurse if config file not found
         if not path.exists(path.join(start_dir, conf_name)):
