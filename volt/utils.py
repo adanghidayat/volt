@@ -64,10 +64,10 @@ def cachedproperty(func):
 
 class Loggable(object):
     """Mixin for adding logging capabilities to classes."""
-
     @cachedproperty
     def logger(self):
-        return logging.getLogger(type(self).__name__)
+        """Logger for this object's instance."""
+        return logging.getLogger(type(self).__name__ + '-' + str(id(self)))
 
 
 def time_string(time):
