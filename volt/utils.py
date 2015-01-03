@@ -11,6 +11,7 @@ Collection of general handy methods used throughout Volt.
 
 """
 
+from __future__ import print_function
 from past.builtins import basestring
 
 import imp
@@ -133,7 +134,7 @@ def console(text, fmt=None, color='grey', is_bright=False, log_time=True):
         text = "\033[{0};{1}m{2}\033[m".format(BRIGHTNESS_MAP[brg], \
                                                  COLOR_MAP[color], string)
 
-    sys.stdout.write(text)
+    print(text, file=sys.stdout)
 
 
 def write_file(file_path, text, bufsize=16384):
