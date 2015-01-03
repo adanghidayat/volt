@@ -70,13 +70,6 @@ class Loggable(object):
         return logging.getLogger(type(self).__name__ + '-' + str(id(self)))
 
 
-def time_string(time):
-    """Returns a string representation of the given time."""
-    fmt = "{:02d}:{:02d}:{:02d}.{:03.0f}"
-    return fmt.format(time.hour, time.minute, time.second, \
-            (time.microsecond / 1000.0 + 0.5))
-
-
 def path_import(name, paths):
     """Imports a module from the specified path.
 
@@ -97,7 +90,8 @@ def path_import(name, paths):
     return imp.load_module(name, *mod_tuple)
 
 
-def console(text, fmt=None, color='grey', is_bright=False, log_time=True):
+def console(text, fmt=None, color='grey', is_bright=False, log_time=True,
+            time_fmt='{H:02d}:{M:02d}:{S:02d}.{f:03.0f}'):
     """Formats the given string for console display.
 
     :param text: Text to display
@@ -113,6 +107,8 @@ def console(text, fmt=None, color='grey', is_bright=False, log_time=True):
     :type is_bright: bool
     :param log_time: Whether to include time information in or not
     :type log_time: bool
+    :param time_fmt: Format of the time string
+    :type time_fmt: str
     :returns: Colored text for console display
     :rtype: str
     :raises ValueError: if '{text}' placeholder is missing and/or '{time}'
@@ -121,11 +117,16 @@ def console(text, fmt=None, color='grey', is_bright=False, log_time=True):
     """
     if format is not None:
         if '{text}' not in text:
-            raise ValueError("Missing '{text}' placeholder for console display.")
+            raise ValueError("Missing '{text}' placeholder for console "
+                             "display.")
         if log_time:
             if '{time}' not in text:
-                raise ValueError("Missing '{time}' placeholder for console display.")
-            string = fmt.format(time=time_string(datetime.now()), text=text)
+                raise ValueError("Missing '{time}' placeholder for console "
+                                 "display.")
+            now = datetime.now()
+            time_str = time_fmt.format(H=now.hour, M=now.minute, S=now.second,
+                                       f=now.microsecond / 1000.0 + 0.5)
+            string = fmt.format(time=time_str, text=text)
         else:
             string = fmt.format(text=text)
 
