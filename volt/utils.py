@@ -47,19 +47,66 @@ def get_func_name(func):
     return func.__name__
 
 
-def cachedproperty(func):
-    """Decorator for cached property loading."""
-    attr_name = get_func_name(func)
-    @property
-    def cached(self):
-        if not hasattr(self, '_cache'):
-            setattr(self, '_cache', {})
-        try:
-            return self._cache[attr_name]
-        except KeyError:
-            result = self._cache[attr_name] = func(self)
-            return result
-    return cached
+class cachedproperty(object):
+
+    """Decorator for cached property loading.
+
+    Based on the descriptor protocol as noted in
+    https://docs.python.org/3.4/howto/descriptor.html#descriptor-protocol
+
+    This decorator is designed to cache results from a getter function
+    without the need to explicitly declare hidden variables.
+
+    Note that this means the deleter function only removes the computed
+    value from the cache. Thus, :meth:`hasattr` will never return `False`
+    for the decorator as on subsequent access the getter recomputes the
+    deleted value and fill the cache again.
+
+    """
+    # NOTE: making fget non-optional
+    # no use case for caching if value is non-readable
+    def __init__(self, fget, fset=None, fdel=None, doc=None):
+        self.fget = fget
+        self.fset = fset
+        self.fdel = fdel
+        if doc is None and fget is not None:
+            doc = fget.__doc__
+        self.__doc__ = doc
+
+    def __get__(self, obj, objtype=None):
+        if obj is None:
+            return self
+        func_name = get_func_name(self.fget)
+        if not hasattr(obj, '_voltcache'):
+            setattr(obj, '_voltcache', {})
+        if not func_name in obj._voltcache:
+            obj._voltcache[func_name] = self.fget(obj)
+        return obj._voltcache[func_name]
+
+    def __set__(self, obj, value):
+        if self.fset is None:
+            raise AttributeError('can\'t set attribute')
+        func_name = get_func_name(self.fset)
+        if not hasattr(obj, '_voltcache'):
+            setattr(obj, '_voltcache', {})
+        self.fset(obj, value)
+        obj._voltcache[func_name] = value
+
+    def __delete__(self, obj):
+        if self.fdel is None:
+            raise AttributeError('can\'t delete attribute')
+        func_name = get_func_name(self.fdel)
+        del obj._voltcache[func_name]
+        self.fdel(obj)
+
+    def getter(self, fget):
+        return type(self)(fget, self.fset, self.fdel, self.__doc__)
+
+    def setter(self, fset):
+        return type(self)(self.fget, fset, self.fdel, self.__doc__)
+
+    def deleter(self, fdel):
+        return type(self)(self.fget, self.fset, fdel, self.__doc__)
 
 
 class Loggable(object):

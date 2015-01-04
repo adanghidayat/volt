@@ -50,15 +50,106 @@ def test_cachedproperty():
             return 1
     m = CPTest()
     # test before call ~ no cache
-    assert not hasattr(m, '_cache')
+    assert not hasattr(m, '_voltcache')
     assert m._cache_check == 0
     # test first call ~ cache initialized
     assert m.x == 1
-    assert hasattr(m, '_cache')
+    assert hasattr(m, '_voltcache')
     assert m._cache_check == 1
     # test second call ~ function not called (counter not incremented)
     assert m.x == 1
     assert m._cache_check == 1
+
+
+def test_cachedproperty_get():
+    # mock class with cachedproperty
+    class CPTest(object):
+        _cache_check = 0
+        @cachedproperty
+        def x(self):
+            self._cache_check += 1
+            return 1
+    class CPTest2(CPTest):
+        _cache_check_sub = 0
+        @CPTest.x.getter
+        def x(self):
+            self._cache_check_sub += 1
+            return 'a'
+    m = CPTest2()
+    # test before call ~ no cache
+    assert not hasattr(m, '_voltcache')
+    assert m._cache_check == 0
+    assert m._cache_check_sub == 0
+    # test first call ~ cache initialized but called from subclass
+    assert m.x == 'a'
+    assert hasattr(m, '_voltcache')
+    print(m._voltcache)
+    assert m._cache_check == 0
+    assert m._cache_check_sub == 1
+    # test second call ~ function not called (counter not incremented)
+    assert m.x == 'a'
+    assert m._cache_check == 0
+    assert m._cache_check_sub == 1
+
+
+def test_cachedproperty_only_get():
+    class CPTest(object):
+        @cachedproperty
+        def x(self): return 1
+    m = CPTest()
+    with pytest.raises(AttributeError):
+        m.x = 2
+    with pytest.raises(AttributeError):
+        del m.x
+
+
+def test_cachedproperty_set():
+    class CPTest(object):
+        _x_set = 0
+        @cachedproperty
+        def x(self): return 1
+        @x.setter
+        def x(self, value): self._x_set += 1
+    m = CPTest()
+    assert m.x == 1
+    assert m._voltcache['x'] == 1
+    assert m._x_set == 0
+    m.x = 2
+    assert m.x == 2
+    assert m._voltcache['x'] == 2
+    assert m._x_set == 1
+
+
+def test_cachedproperty_set_bypass():
+    class CPTest(object):
+        _x_get = 0
+        @cachedproperty
+        def x(self):
+            self._x_get += 1
+            return 1
+        @x.setter
+        def x(self, value): pass
+    m = CPTest()
+    # bypass getter by assigning value
+    m.x = 99
+    assert m.x == 99
+    assert m._voltcache['x'] == 99
+    assert m._x_get == 0
+
+
+def test_cachedproperty_del():
+    class CPTest(object):
+        _x_del = 0
+        @cachedproperty
+        def x(self): return 1
+        @x.deleter
+        def x(self): self._x_del += 1
+    m = CPTest()
+    assert m.x == 1
+    assert m._voltcache['x'] == 1
+    del m.x
+    assert 'x' not in m._voltcache
+    assert m.x == 1
 
 
 def test_loggable():
