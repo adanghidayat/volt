@@ -14,7 +14,7 @@ Volt default configuration values.
 # Changing values in this Config is possible but not recommended
 
 
-## Volt configurations
+# Volt configurations #
 
 # User config file name
 # Used to determine project root
@@ -28,7 +28,7 @@ _ASSET_DIR = 'assets'
 _SITE_DIR = 'site'
 
 
-## Default site configurations
+# Default site configurations #
 
 # Site URL, used for generating absolute URLs
 SITE_URL = 'http://localhost:8000'

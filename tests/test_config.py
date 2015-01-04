@@ -22,6 +22,7 @@ import pytest
 from volt.exceptions import ConfigNotFoundError
 from volt.config import SiteConfigContainer, SiteConfig
 
+
 # helper method for setting up config tests
 def setup_mock_dirs(conf_contents=''):
     uuid = str(uuid4())
@@ -31,7 +32,8 @@ def setup_mock_dirs(conf_contents=''):
     old_dir = os.getcwd()
     os.chdir(d)
     f = path.join(d, 'voltapp.py')
-    with open(f, 'w') as target: target.write(conf_contents)
+    with open(f, 'w') as target:
+        target.write(conf_contents)
     return old_dir, f
 
 
@@ -94,7 +96,8 @@ def test_siteconfigcontainer_reset():
     # actual testing
     scc = SiteConfigContainer()
     assert scc['X'] == 1
-    with open(f, 'w') as target: target.write('X = 2\n')
+    with open(f, 'w') as target:
+        target.write('X = 2\n')
     scc.reset()
     assert scc['X'] == 2
     # cleanup
@@ -141,13 +144,13 @@ def test_siteconfig_adjust_config(config, user_dir, expected):
 def test_siteconfig_load_config():
     mock_mod = ModuleType("mock_mod")
     mock_entries = {
-        'A': 1, '_B': 'string', 'C': {2:3}, 'D': [4], '_E': None,
+        'A': 1, '_B': 'string', 'C': {2: 3}, 'D': [4], '_E': None,
         '_a': 0, '_b': '',
     }
     for key, value in mock_entries.items():
         setattr(mock_mod, key, value)
     expected = {
-        'A': 1, '_B': 'string', 'C': {2:3}, 'D': [4], '_E': None,
+        'A': 1, '_B': 'string', 'C': {2: 3}, 'D': [4], '_E': None,
     }
     assert SiteConfig._load_config(mock_mod) == expected
 
@@ -156,7 +159,8 @@ def test_siteconfig_get_root_dir():
     # setup files and directories
     old_dir, f = setup_mock_dirs('X = 1\n')
     d = path.dirname(f)
-    with open(f, 'w') as target: target.write('x = 1\n')
+    with open(f, 'w') as target:
+        target.write('x = 1\n')
     assert SiteConfig._get_root_dir('voltapp.py') == d
     os.chdir(old_dir)
     shutil.rmtree(d)
@@ -169,7 +173,8 @@ def test_siteconfig_get_root_dir_two_levels():
     assert not path.exists(d)
     os.makedirs(d2)
     f = path.join(d, 'voltapp.py')
-    with open(f, 'w') as target: target.write('x = 1\n')
+    with open(f, 'w') as target:
+        target.write('x = 1\n')
     assert SiteConfig._get_root_dir('voltapp.py', d2) == d
     shutil.rmtree(d)
 

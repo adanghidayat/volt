@@ -79,7 +79,7 @@ class cachedproperty(object):
         func_name = get_func_name(self.fget)
         if not hasattr(obj, '_voltcache'):
             setattr(obj, '_voltcache', {})
-        if not func_name in obj._voltcache:
+        if func_name not in obj._voltcache:
             obj._voltcache[func_name] = self.fget(obj)
         return obj._voltcache[func_name]
 

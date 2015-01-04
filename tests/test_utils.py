@@ -22,32 +22,37 @@ import pytest
 from testfixtures import LogCapture, OutputCapture
 
 from volt.utils import get_func_name, cachedproperty, Loggable, path_import, \
-                       console, write_file
+    console, write_file
 
 
 # helper function for path_import testing
 # returns a tuple of
 # python file basename, NamedTemporaryFile object which does not auto-delete
 def make_pyfile(contents=""):
-    ntf = NamedTemporaryFile(mode='w', prefix='volt_', suffix='.py', delete=False)
+    ntf = NamedTemporaryFile(mode='w', prefix='volt_', suffix='.py',
+                             delete=False)
     ntf.write(contents)
     return path.basename(ntf.name).replace('.py', ''), ntf
 
 
 def test_get_func_name():
     # mock function to test
-    def myfunc(a): pass
+    def myfunc(a):
+        pass
     assert get_func_name(myfunc) == 'myfunc'
 
 
 def test_cachedproperty():
+
     # mock class with cachedproperty
     class CPTest(object):
         _cache_check = 0
+
         @cachedproperty
         def x(self):
             self._cache_check += 1
             return 1
+
     m = CPTest()
     # test before call ~ no cache
     assert not hasattr(m, '_voltcache')
@@ -62,19 +67,24 @@ def test_cachedproperty():
 
 
 def test_cachedproperty_get():
+
     # mock class with cachedproperty
     class CPTest(object):
         _cache_check = 0
+
         @cachedproperty
         def x(self):
             self._cache_check += 1
             return 1
+
     class CPTest2(CPTest):
         _cache_check_sub = 0
+
         @CPTest.x.getter
         def x(self):
             self._cache_check_sub += 1
             return 'a'
+
     m = CPTest2()
     # test before call ~ no cache
     assert not hasattr(m, '_voltcache')
@@ -95,7 +105,8 @@ def test_cachedproperty_get():
 def test_cachedproperty_only_get():
     class CPTest(object):
         @cachedproperty
-        def x(self): return 1
+        def x(self):
+            return 1
     m = CPTest()
     with pytest.raises(AttributeError):
         m.x = 2
@@ -104,12 +115,18 @@ def test_cachedproperty_only_get():
 
 
 def test_cachedproperty_set():
+
     class CPTest(object):
         _x_set = 0
+
         @cachedproperty
-        def x(self): return 1
+        def x(self):
+            return 1
+
         @x.setter
-        def x(self, value): self._x_set += 1
+        def x(self, value):
+            self._x_set += 1
+
     m = CPTest()
     assert m.x == 1
     assert m._voltcache['x'] == 1
@@ -121,14 +138,19 @@ def test_cachedproperty_set():
 
 
 def test_cachedproperty_set_bypass():
+
     class CPTest(object):
         _x_get = 0
+
         @cachedproperty
         def x(self):
             self._x_get += 1
             return 1
+
         @x.setter
-        def x(self, value): pass
+        def x(self, value):
+            pass
+
     m = CPTest()
     # bypass getter by assigning value
     m.x = 99
@@ -138,12 +160,18 @@ def test_cachedproperty_set_bypass():
 
 
 def test_cachedproperty_del():
+
     class CPTest(object):
         _x_del = 0
+
         @cachedproperty
-        def x(self): return 1
+        def x(self):
+            return 1
+
         @x.deleter
-        def x(self): self._x_del += 1
+        def x(self):
+            self._x_del += 1
+
     m = CPTest()
     assert m.x == 1
     assert m._voltcache['x'] == 1
@@ -192,7 +220,8 @@ def test_path_import_reload():
     imported = path_import(mname, gettempdir())
     assert imported.x == 1
     # second import ~ value changed
-    with open(f.name, 'w') as target: target.write('x = 2\n')
+    with open(f.name, 'w') as target:
+        target.write('x = 2\n')
     imported = path_import(mname, gettempdir())
     sys.dont_write_bytecode = False
     assert imported.x == 2
